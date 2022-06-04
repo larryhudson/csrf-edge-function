@@ -4,10 +4,39 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Form with CSRF token</title>
+    <title>CSRF protection with Netlify Edge Functions</title>
   </head>
   <body>
-    <h1>Form with CSRF token</h1>
+    <h1>CSRF protection with Netlify Edge Functions</h1>
+    <p>By <a href="https://twitter.com/larryhudsondev">Larry Hudson</a></p>
+    <p>
+      This example uses
+      <a
+        href="https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/"
+        >Netlify Edge Functions</a
+      >
+      to add
+      <a href="https://en.wikipedia.org/wiki/Cross-site_request_forgery"
+        >cross-site request forgery</a
+      >
+      (CSRF) protection to the form below.
+    </p>
+
+    <p>
+      You can
+      <a href="https://github.com/larryhudson/csrf-edge-function/"
+        >view the source code on GitHub</a
+      >.
+    </p>
+
+    <p>
+      Disclaimer: I'm not a security expert. If you have any ideas for improving
+      this example, please
+      <a href="https://github.com/larryhudson/csrf-edge-function/pulls"
+        >submit a pull request</a
+      >.
+    </p>
+    <h2>Try out the form</h2>
     <form method="post" action="/submit">
       <label for="name"> Name: </label>
       <input name="name" id="name" />
@@ -16,5 +45,62 @@
 
       <button>Submit</button>
     </form>
+
+    <h2>How this works</h2>
+
+    <h3>When you load this page (the home page with the form)</h3>
+
+    <p>On every request, the <code>insert-csrf-token</code> function:</p>
+
+    <ul>
+      <li>generates a 32-character random string</li>
+      <li>
+        scrambles the random string using the
+        <code>CSRF_FORM_INPUT_SECRET</code>
+        <a
+          href="https://docs.netlify.com/configure-builds/environment-variables/"
+          >environment variable</a
+        >
+        set in the Netlify site configuration
+      </li>
+      <li>
+        inserts the scrambled string into the value of the hidden form input. It
+        does this by replacing the <code>INCLUDE_CSRF_TOKEN</code> placeholder
+        in the HTML.
+      </li>
+      <li>
+        scrambles the original random string a second time, using the
+        <code>CSRF_COOKIE_SECRET</code> environment variable
+      </li>
+      <li>
+        sets a secure, HTTP-only <code>csrf_cookie_token</code> cookie with the
+        second scrambled string. This expires after 1 hour.
+      </li>
+    </ul>
+
+    <h3>When you submit the form</h3>
+
+    <p>
+      When you hit 'Submit', it sends a POST request to <code>/submit</code>.
+      The <code>check-csrf-token</code> function:
+    </p>
+
+    <ul>
+      <li>
+        checks the submitted <code>csrf_token</code> from the request form data
+        (from the hidden form input)
+      </li>
+      <li>checks the <code>csrf_cookie_token</code> cookie of the request</li>
+      <li>decrypts both using the secret environment variables</li>
+      <li>checks if the two decrypted values are identical</li>
+      <li>
+        if either of the values are missing, or they do not match, it responds
+        with status 403 forbidden
+      </li>
+      <li>
+        if the decrypted values match, it responds with status 200 with a
+        friendly message.
+      </li>
+    </ul>
   </body>
 </html>
