@@ -1,3 +1,7 @@
 [[edge_functions]]
 path = "/"
 function = "insert-csrf-token"
+
+[[edge_functions]]
+path = "/submit"
+function = "check-csrf-token"
