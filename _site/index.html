@@ -5,6 +5,26 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSRF protection with Netlify Edge Functions</title>
+
+    <meta property="og:url" content="https://csrf-edge-function.netlify.app/" />
+    <meta
+      property="og:title"
+      content="CSRF protection with Netlify Edge Functions"
+    />
+    <meta
+      property="og:description"
+      content="An example of how to add cross-site request forgery protection to a static webpage with Netlify Edge Functions"
+    />
+    <meta property="og:locale" content="en_AU" />
+
+    <style>
+      html {
+        line-height: 1.5;
+        max-width: 60ch;
+        margin: 0 auto;
+        font-family: sans-serif;
+      }
+    </style>
   </head>
   <body>
     <h1>CSRF protection with Netlify Edge Functions</h1>
@@ -30,8 +50,9 @@
     </p>
 
     <p>
-      Disclaimer: I'm not a security expert. If you have any ideas for improving
-      this example, please
+      Disclaimer: I'm not a security expert. I would love to get some feedback
+      about this approach. If you have any ideas for improving this example,
+      please
       <a href="https://github.com/larryhudson/csrf-edge-function/pulls"
         >submit a pull request</a
       >.
@@ -50,7 +71,14 @@
 
     <h3>When you load this page (the home page with the form)</h3>
 
-    <p>On every request, the <code>insert-csrf-token</code> function:</p>
+    <p>
+      On every request, the
+      <a
+        href="https://github.com/larryhudson/csrf-edge-function/blob/main/netlify/edge-functions/insert-csrf-token.js"
+        ><code>insert-csrf-token</code></a
+      >
+      function:
+    </p>
 
     <ul>
       <li>generates a 32-character random string</li>
@@ -82,16 +110,25 @@
 
     <p>
       When you hit 'Submit', it sends a POST request to <code>/submit</code>.
-      The <code>check-csrf-token</code> function:
+      The
+      <a
+        href="https://github.com/larryhudson/csrf-edge-function/blob/main/netlify/edge-functions/check-csrf-token.js"
+        ><code>check-csrf-token</code></a
+      >
+      function:
     </p>
 
     <ul>
       <li>
-        checks the submitted <code>csrf_token</code> from the request form data
-        (from the hidden form input)
+        gets the submitted <code>csrf_token</code> from the request form data
+        (from the hidden form input) and decrypts it using the
+        <code>CSRF_FORM_INPUT_SECRET</code> environment variable
       </li>
-      <li>checks the <code>csrf_cookie_token</code> cookie of the request</li>
-      <li>decrypts both using the secret environment variables</li>
+      <li>
+        gets the <code>csrf_cookie_token</code> cookie of the request and
+        decrypts it using the <code>CSRF_COOKIE_SECRET</code> environment
+        variable
+      </li>
       <li>checks if the two decrypted values are identical</li>
       <li>
         if either of the values are missing, or they do not match, it responds
