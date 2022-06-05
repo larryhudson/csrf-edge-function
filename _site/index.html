@@ -102,7 +102,9 @@
       </li>
       <li>
         sets a secure, HTTP-only <code>csrf_cookie_token</code> cookie with the
-        second scrambled string. This expires after 1 hour.
+        second scrambled string. This is set on the response so it is saved in
+        the user's browser, and it sent with any subsequent requests. This
+        expires after 1 hour.
       </li>
     </ul>
 
